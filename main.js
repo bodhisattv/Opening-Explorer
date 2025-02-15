@@ -344,7 +344,7 @@ $(() => {
         }, timeout);
     
         try {
-            let url = `http://34.31.72.37:3003/fen?fen=${encodeURIComponent(fen)}&apiKey=${apiKey}&priority=${priority}`;
+            let url = `https://34.31.72.37:3003/fen?fen=${encodeURIComponent(fen)}&apiKey=${apiKey}&priority=${priority}`;
             const response = await fetch(url, { signal });
     
             if (!response.ok) {
