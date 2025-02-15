@@ -1,0 +1,395 @@
+<!--// Portions of this code are based on the original work by Alex Davison
+// Original repository: https://github.com/qiuzhu0/chessdb-mobile
+// 
+// Copyright (c) 2025 Shane Harwood
+// All rights reserved. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:,">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+  <title>Opening Exlporer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: monospace;
+    }
+
+    html {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #000;
+      color: #fff;
+      font-size: 1.5em;
+      margin: 0;
+      padding: 0;
+    }
+
+    #board, #arrow-layer {
+      width: min(78vh,65vw);
+      height: min(78vh,65vw);
+      touch-action: none;
+      box-sizing: content-box;
+      margin: 0;
+      position: relative;
+    }
+
+    #board {
+      position: relative;
+      z-index: 1; /* Board layer */
+    }
+
+    .piece-417db {
+      position: relative;
+      z-index: 3; /* Pieces layer */
+    }
+
+    /* .white-1e1d7 {
+      background-color: #bbb; 
+      
+    }
+
+    .black-3c85d {
+      background-color: #064;
+    } */
+
+    .white-1e1d7 {
+      background-color: #aaa; 
+      
+    }
+
+    .black-3c85d {
+      background-color: #255;
+    }
+
+    .move-list-container {
+      flex: 1;
+      margin-left: 1vw;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      height: min(78vh,65vw);
+    }
+    #sorting-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .color-box {
+      text-align: center;
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .color-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .rgb-option {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 15px;
+    }
+
+    .red { background-color: rgba(255, 99, 71, 0.7); }
+    .green { background-color: rgba(60, 179, 113, 0.7); }
+    .blue { background-color: rgba(70, 130, 180, 0.7); }
+
+    .active-selection {
+      border: 2px solid yellow;
+      font-weight: bold;
+    }
+
+    .move-list {
+      padding-left: 0px;
+      overflow-y: auto;
+    }
+
+    #orig-sort-container {
+      border-right: 1px solid #000000;
+      background-color: red;
+      height: 23px;
+    }
+
+    .form-container {
+      margin-top: 2px;
+      white-space: nowrap;
+      display: inline-block;
+      margin-right: 2vw;
+    }
+
+    .chess-container {
+      height: min(78vh,65vw);
+      display: flex;
+      flex-direction: row;  
+      margin-top: 0px;
+    }
+
+    #queryinfo {
+      text-align: center;
+    }
+
+    #metadata-container {
+      white-space: nowrap;
+      margin-left: 2vw;
+      height: 22px;
+    }
+
+    .metadata {
+      display: inline-block;
+      margin-right: 1vw;
+    }
+
+    .last-move {
+      background-color: rgba(255, 255, 150, 0.6) !important; /* Soft yellow with transparency */
+    }
+
+    .toggle-button {
+      padding: 5px 10px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #444; /* Default inactive color */
+      color: white;
+      cursor: pointer;
+    }
+
+    .toggle-button.active {
+      background-color: #28a745; /* Green for active state */
+      color: white;
+      border-color: #1e7e34;
+    }
+
+    .toggle-button:hover {
+      opacity: 0.9; /* Slight highlight on hover */
+    }
+
+    .active-selection {
+      border: 2px solid rgb(255, 255, 255);
+      font-weight: bold;
+      padding: 10px; /* Increase padding for the selected sorting criteria */
+      transition: all 0.2s ease-in-out; /* Smooth animation */
+    }
+
+    #arrow-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 2; /* Arrows layer */
+    }
+
+    #opponent-box, #player-box {
+      display: none; /* Hide by default */
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:active {
+      background-color: #004494;
+    }
+    select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+      color: #333;
+    }
+
+    .color-box p {
+      font-family: 'Roboto', sans-serif;
+      font-size: 1em;
+      color: #333;
+      margin-top: 10px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="chess-container" >
+    <div id="board" ></div>
+    <svg id="arrow-layer" style="position: absolute; top: 0; left: 0; pointer-events: none; width: 100%; height: 100%;"></svg>
+    <div id="query-info-container" class="move-list-container">
+      
+      <!-- Sorting Boxes -->
+      <div id="sorting-container">
+        <div id="opponent-box" class="color-box">
+          <div class="rgb-option red">
+            <select id="opponent-red">
+              <option value="tricky" selected>Tricky</option>
+              <option value="WR">WR</option>
+              <option value="popularity">Popularity</option>
+            </select>
+          </div>
+          <div class="rgb-option green">
+            <select id="opponent-green">
+              <option value="popWR">popWR</option>
+              <option value="WRtimid" selected>WRtimid</option>
+            </select>
+          </div>
+          <div class="rgb-option blue">
+            <select id="opponent-blue">
+              <option value="forceful" selected>Forceful</option>
+              <option value="patient">Patient</option>
+            </select>
+          </div>
+          <p>Them</p>
+        </div>
+
+        <div id="player-box" class="color-box">
+          <div class="rgb-option red">
+            <select id="player-red">
+              <option value="tricky" selected>Tricky</option>
+              <option value="WR">WR</option>
+              <option value="popularity">Popularity</option>
+            </select>
+          </div>
+          <div class="rgb-option green">
+            <select id="player-green">
+              <option value="WRtimid" selected>WRtimid</option>
+              <option value="popWR">popWR</option>
+            </select>
+          </div>
+          <div class="rgb-option blue">
+            <select id="player-blue">
+              <option value="forceful" selected>Forceful</option>
+              <option value="patient">Patient</option>
+            </select>
+          </div>
+          <p>You</p>
+        </div>
+      </div>
+    <div id="query-info" class="move-list"></div>
+  </div>
+</div>
+
+  <button id="flip-board">Flip Board</button>
+  <button id="reset-board">Reset Board</button> <!-- New Reset Button -->
+  <button id="pgn">Copy PGN</button>
+  <button id="copy-img">Copy IMG</button> <!-- New Copy IMG Button -->
+  <p id="status-opening" class="metadata"></p>
+  <p id="pgn-display" class="metadata" style="display: block; margin: 2px 10px 2px 10px;"></p> <!-- New PGN Display -->
+  <div id="metadata-container">
+    <button id="go-back"><</button>
+    <p id="status-display" class="metadata"></p>
+    <a style="margin-left: 2vw" id="lichess" class="metadata" target="_blank" href="https://lichess.org/analysis/fromPosition/rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR%20w%20KQkq%20-%200%201"></a>
+    <input type="checkbox" id="masters" class="metadata">
+    <div id="pgn-display" class="metadata" style="margin-left: 10px; display: block;"></div>
+    <div id="status-panel">
+      <p>Queue Size: <span id="queue-size">0</span>     Cache Size: <span id="cache-size">0</span>     Graph Size: <span id="graph-size">0</span></p></p>
+  </div>
+  <!-- <div id="filters-container" style="margin-top: 10px;">
+    <p>Time Controls:</p>
+    <button class="toggle-button active" data-type="time" data-value="blitz">Blitz</button>
+    <button class="toggle-button active" data-type="time" data-value="rapid">Rapid</button>
+    <button class="toggle-button" data-type="time" data-value="classical">Classical</button>
+  
+    <p>Ratings:</p>
+    <button class="toggle-button" data-type="rating" data-value="400">400</button>
+    <button class="toggle-button" data-type="rating" data-value="1000">1000</button>
+    <button class="toggle-button active" data-type="rating" data-value="1200">1200</button>
+    <button class="toggle-button active" data-type="rating" data-value="1400">1400</button>
+    <button class="toggle-button active" data-type="rating" data-value="1600">1600</button>
+    <button class="toggle-button active" data-type="rating" data-value="1800">1800</button>
+    <button class="toggle-button active" data-type="rating" data-value="2000">2000</button>
+    <button class="toggle-button active" data-type="rating" data-value="2200">2200</button>
+    <button class="toggle-button active" data-type="rating" data-value="2500">2500</button>
+  </div> -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string/libs/lz-string.min.js"></script>
+  <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
+  <script type="module" src="main.js"></script>
+  <script>
+    // Function to copy the board with arrows image to the clipboard
+    async function copyBoardImage() {
+      const boardElement = document.getElementById('board');
+      const arrowLayer = document.getElementById('arrow-layer');
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      container.style.width = boardElement.offsetWidth + 'px';
+      container.style.height = (boardElement.offsetHeight + 40) + 'px'; // Increase height to accommodate text
+      container.appendChild(boardElement.cloneNode(true));
+      container.appendChild(arrowLayer.cloneNode(true));
+
+      // Create a canvas for the text
+      const textCanvas = document.createElement('canvas');
+      textCanvas.width = boardElement.offsetWidth;
+      textCanvas.height = 50; // Height for the text
+      const ctx = textCanvas.getContext('2d');
+
+      // Draw the PGN on the left in black
+      ctx.fillStyle = 'black';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      //word wrap
+
+      const pgnText = document.getElementById('pgn-display').innerText;
+
+      //after every 8th move, add a new line, moves are numbered with two moves after e.g. 1. e4 e5 2. Nf3 Nc6
+      let pgnTextWrapped = '';
+      let count = 0;
+      for (let i = 0; i < pgnText.length; i++) {
+        if (pgnText[i] === '.') { //move number preceded by a dot
+          count++;
+          if (count % 8 === 1) {
+            //insert a new line before the preceding number
+            pgnTextWrapped = pgnTextWrapped.slice(0, -2) + '\n' + pgnTextWrapped.slice(-2);
+            // console.log("new line inserted");
+          }
+        }
+        pgnTextWrapped += pgnText[i];
+      }
+
+
+      ctx.fillText(pgnText, 5, 30);
+
+      // Draw "ChessPath.Pro" on the right in red
+      ctx.font = '40px Arial';
+      ctx.fillStyle = 'red';
+      ctx.textAlign = 'right';
+      ctx.fillText('ChessPath.Pro', textCanvas.width - 5, 50);
+
+      // Append the text canvas to the container
+      const textCanvasContainer = document.createElement('div');
+      textCanvasContainer.style.position = 'absolute';
+      textCanvasContainer.style.bottom = '0';
+      textCanvasContainer.style.left = '0';
+      textCanvasContainer.appendChild(textCanvas);
+      container.appendChild(textCanvasContainer);
+
+      document.body.appendChild(container); // Append to the body to ensure it's in the DOM
+
+      html2canvas(container).then(canvas => {
+        canvas.toBlob(blob => {
+          const item = new ClipboardItem({ 'image/png': blob });
+          navigator.clipboard.write([item]);
+          document.body.removeChild(container); // Clean up the container after copying
+        });
+      });
+    }
+
+    // Add event listener to the Copy IMG button
+    document.getElementById('copy-img').addEventListener('click', copyBoardImage);
+  </script>
+</body>
+</html>
