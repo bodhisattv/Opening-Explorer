@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ChessPath with Green Trim</title>
+  <style>
+    body {
+      margin: 0;
+      background: green;
+      /* Ensure the trim is always visible */
+      min-height: 100vh;
+      min-width: 100vw;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .trim-container {
+      box-sizing: border-box;
+      width: calc(100vw - 400px);
+      height: calc(100vh - 400px);
+      margin: 200px;
+      border: 0;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="trim-container">
+    <!-- <iframe src="https://chessbook.com"></iframe> -->
+    <!-- <iframe src="https://chesstyle.net"></iframe> -->
+    <!-- <iframe src="https://google.com"></iframe> -->
+    <iframe src="https://chesspath.pro"></iframe>
+  </div>
+</body>
+</html>
